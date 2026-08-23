@@ -1,0 +1,13 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+.idea
+
+# Local SQLite database files
+App_Data/
+*.db
+
+# IDE user settings
+*.user
