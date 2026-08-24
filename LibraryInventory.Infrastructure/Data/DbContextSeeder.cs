@@ -36,8 +36,8 @@ public static class DbContextSeeder
         if (!db.Members.Any())
         {
             db.Members.AddRange(
-                new Member("Alice Johnson", "alice@example.com", new Uri("https://example.com/alice.jpg")),
-                new Member("Bob Smith", "bob@example.com", new Uri("https://example.com/bob.jpg"))
+                new Member("Alice Johnson", "alice@example.com"),
+                new Member("Bob Smith", "bob@example.com")
             );
             await db.SaveChangesAsync(ct);
         }

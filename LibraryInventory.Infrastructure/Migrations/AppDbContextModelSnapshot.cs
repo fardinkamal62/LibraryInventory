@@ -135,6 +135,14 @@ namespace LibraryInventory.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("MemberAddress")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MemberEmail")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("MemberId")
                         .HasColumnType("INTEGER");
 
@@ -143,10 +151,6 @@ namespace LibraryInventory.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PhotoUrl")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("memberEmail")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
