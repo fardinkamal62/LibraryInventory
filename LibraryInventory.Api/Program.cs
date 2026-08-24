@@ -3,7 +3,7 @@ using FluentValidation.AspNetCore;
 using LibraryInventory.Api.Dtos.Books;
 using LibraryInventory.Api.Services;
 using LibraryInventory.Api.Validators.Books;
-using LibraryInventory.Infrastructure;
+using LibraryInventory.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,6 +36,13 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await DbContextSeeder.SeedAsync(db);
+    await db.Database.MigrateAsync();
 }
 
 // Configure the HTTP request pipeline.

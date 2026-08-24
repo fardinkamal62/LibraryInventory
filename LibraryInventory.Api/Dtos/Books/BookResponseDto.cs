@@ -1,4 +1,4 @@
-using LibraryInventory.Core;
+using LibraryInventory.Core.Entities;
 
 namespace LibraryInventory.Api.Dtos.Books;
 

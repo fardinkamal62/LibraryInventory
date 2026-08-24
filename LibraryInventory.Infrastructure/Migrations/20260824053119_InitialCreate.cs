@@ -15,35 +15,40 @@ namespace LibraryInventory.Infrastructure.Migrations
                 name: "Members",
                 columns: table => new
                 {
-                    MemberId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    MemberName = table.Column<string>(type: "TEXT", maxLength: 150, nullable: false),
-                    Email = table.Column<string>(type: "TEXT", maxLength: 255, nullable: false)
+                    MemberId = table.Column<int>(type: "INTEGER", nullable: false),
+                    MemberName = table.Column<string>(type: "TEXT", nullable: false),
+                    memberEmail = table.Column<string>(type: "TEXT", nullable: false),
+                    PhotoUrl = table.Column<string>(type: "TEXT", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Members", x => x.MemberId);
+                    table.PrimaryKey("PK_Members", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
                 name: "Checkouts",
                 columns: table => new
                 {
-                    CheckOutId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    CheckOutId = table.Column<int>(type: "INTEGER", nullable: false),
                     CheckedOutAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false),
                     ReturnedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    MemberId = table.Column<int>(type: "INTEGER", nullable: false)
+                    MemberId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Checkouts", x => x.CheckOutId);
+                    table.PrimaryKey("PK_Checkouts", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Checkouts_Members_MemberId",
                         column: x => x.MemberId,
                         principalTable: "Members",
-                        principalColumn: "MemberId",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -59,48 +64,52 @@ namespace LibraryInventory.Infrastructure.Migrations
                     Price = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
                     PageMaterial = table.Column<string>(type: "TEXT", nullable: false),
                     PhotoUrl = table.Column<string>(type: "TEXT", nullable: false),
-                    CheckOutId = table.Column<int>(type: "INTEGER", nullable: true)
+                    CheckoutId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Id = table.Column<int>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Books", x => x.BookId);
                     table.ForeignKey(
-                        name: "FK_Books_Checkouts_CheckOutId",
-                        column: x => x.CheckOutId,
+                        name: "FK_Books_Checkouts_CheckoutId",
+                        column: x => x.CheckoutId,
                         principalTable: "Checkouts",
-                        principalColumn: "CheckOutId");
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
                 name: "CheckoutItems",
                 columns: table => new
                 {
-                    CheckoutItemId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
+                    CheckoutItemId = table.Column<int>(type: "INTEGER", nullable: false),
                     CheckoutId = table.Column<int>(type: "INTEGER", nullable: false),
-                    BookId = table.Column<int>(type: "INTEGER", nullable: false)
+                    BookId = table.Column<int>(type: "INTEGER", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CheckoutItems", x => x.CheckoutItemId);
+                    table.PrimaryKey("PK_CheckoutItems", x => x.Id);
                     table.ForeignKey(
                         name: "FK_CheckoutItems_Books_BookId",
                         column: x => x.BookId,
                         principalTable: "Books",
                         principalColumn: "BookId",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_CheckoutItems_Checkouts_CheckoutId",
                         column: x => x.CheckoutId,
                         principalTable: "Checkouts",
-                        principalColumn: "CheckOutId",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Books_CheckOutId",
+                name: "IX_Books_CheckoutId",
                 table: "Books",
-                column: "CheckOutId");
+                column: "CheckoutId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Books_IsbnNumber",
@@ -114,21 +123,14 @@ namespace LibraryInventory.Infrastructure.Migrations
                 column: "BookId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CheckoutItems_CheckoutId_BookId",
+                name: "IX_CheckoutItems_CheckoutId",
                 table: "CheckoutItems",
-                columns: new[] { "CheckoutId", "BookId" },
-                unique: true);
+                column: "CheckoutId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Checkouts_MemberId",
                 table: "Checkouts",
                 column: "MemberId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Members_Email",
-                table: "Members",
-                column: "Email",
-                unique: true);
         }
 
         /// <inheritdoc />

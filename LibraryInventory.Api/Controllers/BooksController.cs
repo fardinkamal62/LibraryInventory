@@ -1,7 +1,7 @@
 using FluentValidation;
 using LibraryInventory.Api.Dtos.Books;
 using LibraryInventory.Api.Services;
-using LibraryInventory.Core;
+using LibraryInventory.Core.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryInventory.Api.Controllers;

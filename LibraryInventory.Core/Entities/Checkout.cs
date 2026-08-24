@@ -1,6 +1,6 @@
 using LibraryInventory.Core.Common;
 
-namespace LibraryInventory.Core;
+namespace LibraryInventory.Core.Entities;
 
 public class Checkout : BaseEntity
 {
@@ -29,7 +29,7 @@ public class Checkout : BaseEntity
             throw new ArgumentException("At least one book must be checked out", nameof(books));
 
         MemberId = memberId;
-        Items = books.Select(b => new CheckoutItem(b.BookId, b)).ToList();
+        Items = books.Select(b => new CheckoutItem(b.BookId) { Book = b }).ToList();
     }
 
     // Domain behaviour

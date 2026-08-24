@@ -1,7 +1,7 @@
 using LibraryInventory.Api.Dtos.Books;
-using LibraryInventory.Core;
+using LibraryInventory.Core.Entities;
 using LibraryInventory.Core.Common;
-using LibraryInventory.Infrastructure;
+using LibraryInventory.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace LibraryInventory.Api.Services;

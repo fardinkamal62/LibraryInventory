@@ -1,6 +1,6 @@
 using LibraryInventory.Core.Common;
 
-namespace LibraryInventory.Core;
+namespace LibraryInventory.Core.Entities;
 
 public enum PageTypeEnum
 {
