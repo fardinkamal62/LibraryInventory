@@ -11,3 +11,5 @@ App_Data/
 
 # IDE user settings
 *.user
+
+.puku-cli

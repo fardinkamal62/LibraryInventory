@@ -1,7 +1,7 @@
 using FluentValidation;
 using LibraryInventory.Api.Dtos.Books;
-using LibraryInventory.Api.Services;
 using LibraryInventory.Core.Entities;
+using LibraryInventory.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryInventory.Api.Controllers;
@@ -41,7 +41,11 @@ public class BooksController(IBookService bookService) : ControllerBase
         var validation = await validator.ValidateAsync(dto, ct);
         if (!validation.IsValid) return BadRequest(validation.Errors);
 
-        var result = await bookService.CreateAsync(dto, ct);
+        var command = new CreateBookCommand(
+            dto.BookName, dto.Author, dto.IsbnNumber,
+            dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl);
+
+        var result = await bookService.CreateAsync(command, ct);
         return result.IsSuccess
             ? CreatedAtAction(nameof(GetById), new { id = result.Data!.BookId }, ToDto(result.Data))
             : MapFailure(result.Message);
@@ -58,7 +62,11 @@ public class BooksController(IBookService bookService) : ControllerBase
         var validation = await validator.ValidateAsync(dto, ct);
         if (!validation.IsValid) return BadRequest(validation.Errors);
 
-        var result = await bookService.UpdateAsync(id, dto, ct);
+        var command = new UpdateBookCommand(
+            dto.BookName, dto.Author, dto.IsbnNumber,
+            dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl);
+
+        var result = await bookService.UpdateAsync(id, command, ct);
         return result.IsSuccess
             ? Ok(ToDto(result.Data!))
             : MapFailure(result.Message);

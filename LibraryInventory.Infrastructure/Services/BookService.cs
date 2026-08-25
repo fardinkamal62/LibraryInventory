@@ -1,30 +1,30 @@
-using LibraryInventory.Api.Dtos.Books;
 using LibraryInventory.Core.Entities;
 using LibraryInventory.Core.Common;
+using LibraryInventory.Core.Interfaces;
 using LibraryInventory.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace LibraryInventory.Api.Services;
+namespace LibraryInventory.Infrastructure.Services;
 
 public class BookService(AppDbContext db) : IBookService
 {
-    public async Task<Result<Book>> CreateAsync(CreateBookDto dto, CancellationToken ct)
+    public async Task<Result<Book>> CreateAsync(CreateBookCommand command, CancellationToken ct)
     {
         try
         {
             // Business rule: ISBN must be unique
-            var isbnExists = await db.Books.AnyAsync(b => b.IsbnNumber == dto.IsbnNumber, ct);
+            var isbnExists = await db.Books.AnyAsync(b => b.IsbnNumber == command.IsbnNumber, ct);
             if (isbnExists)
-                return Result<Book>.Failure($"A book with ISBN {dto.IsbnNumber} already exists");
+                return Result<Book>.Failure($"A book with ISBN {command.IsbnNumber} already exists");
 
             var book = new Book(
-                dto.BookName,
-                dto.Author,
-                dto.IsbnNumber,
-                dto.PageCount,
-                dto.Price,
-                dto.PageMaterial,
-                dto.PhotoUrl
+                command.BookName,
+                command.Author,
+                command.IsbnNumber,
+                command.PageCount,
+                command.Price,
+                command.PageMaterial,
+                command.PhotoUrl
             );
 
             db.Books.Add(book);
@@ -58,7 +58,7 @@ public class BookService(AppDbContext db) : IBookService
             .ToListAsync(ct);
     }
 
-    public async Task<Result<Book>> UpdateAsync(int id, UpdateBookDto dto, CancellationToken ct)
+    public async Task<Result<Book>> UpdateAsync(int id, UpdateBookCommand command, CancellationToken ct)
     {
         try
         {
@@ -67,12 +67,12 @@ public class BookService(AppDbContext db) : IBookService
                 return Result<Book>.Failure($"Book with id {id} not found");
 
             var isbnExists = await db.Books.AnyAsync(
-                b => b.IsbnNumber == dto.IsbnNumber && b.BookId != id, ct);
+                b => b.IsbnNumber == command.IsbnNumber && b.BookId != id, ct);
             if (isbnExists)
-                return Result<Book>.Failure($"A book with ISBN {dto.IsbnNumber} already exists");
+                return Result<Book>.Failure($"A book with ISBN {command.IsbnNumber} already exists");
 
-            book.UpdateDetails(dto.IsbnNumber, dto.BookName, dto.PageMaterial, dto.PhotoUrl, dto.PageCount);
-            book.ChangePrice(dto.Price);
+            book.UpdateDetails(command.IsbnNumber, command.BookName, command.PageMaterial, command.PhotoUrl, command.PageCount);
+            book.ChangePrice(command.Price);
 
             await db.SaveChangesAsync(ct);
             return Result<Book>.Success(book, "Book updated");
