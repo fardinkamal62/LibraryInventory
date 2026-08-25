@@ -1,6 +1,16 @@
-@LibraryInventory_HostAddress = http://localhost:5043
+@LibraryInventory_HostAddress = http://localhost:5043/api
 
-GET {{LibraryInventory_HostAddress}}/weatherforecast/
+
+# Fetch all books
+GET {{LibraryInventory_HostAddress}}/books/
 Accept: application/json
 
 ###
+# Fetch a specific book by ID
+GET {{LibraryInventory_HostAddress}}/books/2
+Accept: application/json
+
+###
+# Fetch all members
+GET {{LibraryInventory_HostAddress}}/members/
+Accept: application/json

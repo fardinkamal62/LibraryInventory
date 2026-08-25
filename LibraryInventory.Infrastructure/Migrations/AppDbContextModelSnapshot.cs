@@ -96,7 +96,7 @@ namespace LibraryInventory.Infrastructure.Migrations
 
                     b.HasIndex("MemberId");
 
-                    b.ToTable("Checkouts");
+                    b.ToTable("Checkouts", (string)null);
                 });
 
             modelBuilder.Entity("LibraryInventory.Core.Entities.CheckoutItem", b =>
@@ -123,7 +123,7 @@ namespace LibraryInventory.Infrastructure.Migrations
 
                     b.HasIndex("CheckoutId");
 
-                    b.ToTable("CheckoutItems");
+                    b.ToTable("CheckoutItems", (string)null);
                 });
 
             modelBuilder.Entity("LibraryInventory.Core.Entities.Member", b =>
@@ -156,7 +156,7 @@ namespace LibraryInventory.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Members");
+                    b.ToTable("Members", (string)null);
                 });
 
             modelBuilder.Entity("LibraryInventory.Core.Entities.Book", b =>

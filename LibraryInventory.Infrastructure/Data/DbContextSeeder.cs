@@ -6,8 +6,6 @@ public static class DbContextSeeder
 {
     public static async Task SeedAsync(AppDbContext db, CancellationToken ct = default)
     {
-        await db.Database.EnsureCreatedAsync(ct);
-
         if (!db.Books.Any())
         {
             db.Books.AddRange(

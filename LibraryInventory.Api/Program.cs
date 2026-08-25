@@ -1,6 +1,5 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using LibraryInventory.Api.Dtos.Books;
 using LibraryInventory.Api.Validators.Books;
 using LibraryInventory.Core.Interfaces;
 using LibraryInventory.Infrastructure.Data;
@@ -26,6 +25,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 // Register application services (interfaces live in Core, implementations in Infrastructure)
 builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IMemberService, MemberService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -36,8 +36,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DbContextSeeder.SeedAsync(db);
     await db.Database.MigrateAsync();
+    await DbContextSeeder.SeedAsync(db);
 }
 
 // Configure the HTTP request pipeline.
