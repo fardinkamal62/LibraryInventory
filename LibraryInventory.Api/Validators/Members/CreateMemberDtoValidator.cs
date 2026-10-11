@@ -1,7 +1,7 @@
 using FluentValidation;
-using LibraryInventory.Dtos.Members;
+using LibraryInventory.Api.Dtos.Members;
 
-namespace LibraryInventory.Validators.Members;
+namespace LibraryInventory.Api.Validators.Members;
 
 public class CreateMemberDtoValidator : AbstractValidator<CreateMemberDto>
 {

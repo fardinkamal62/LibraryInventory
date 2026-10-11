@@ -12,5 +12,6 @@ public record CreateBookDto(
     int PageCount,
     decimal Price,
     PageTypeEnum PageMaterial,
-    Uri PhotoUrl
+    Uri PhotoUrl,
+    int TotalCopies
 );

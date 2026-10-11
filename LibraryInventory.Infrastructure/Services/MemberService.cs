@@ -69,7 +69,7 @@ public class MemberService(AppDbContext db) : IMemberService
             if (member is null) return await Task.FromResult(OperationResult.Failure($"Member with id {id} not found"));
 
             // Business rule: cannot delete member with active checkouts
-            var hasActive = await db.Checkouts.AnyAsync(c => c.MemberId == id && c.ReturnedAt == null, ct);
+            var hasActive = await db.Checkouts.AnyAsync(c => c.MemberId == id && c.ReturnedAtUtc == null, ct);
             if (hasActive) return await Task.FromResult(OperationResult.Failure("Cannot delete member with active checkouts"));
 
             db.Members.Remove(member);

@@ -24,7 +24,8 @@ public class BookService(AppDbContext db) : IBookService
                 command.PageCount,
                 command.Price,
                 command.PageMaterial,
-                command.PhotoUrl
+                command.PhotoUrl,
+                command.TotalCopies
             );
 
             db.Books.Add(book);
@@ -40,7 +41,7 @@ public class BookService(AppDbContext db) : IBookService
 
     public async Task<Result<Book>> GetByIdAsync(int id, CancellationToken ct)
     {
-        var book = await db.Books.AsNoTracking().FirstOrDefaultAsync(b => b.BookId == id, ct);
+        var book = await db.Books.AsNoTracking().FirstOrDefaultAsync(b => b.Id == id, ct);
         if (book is null)
             return Result<Book>.Failure($"Book with id {id} not found");
         return Result<Book>.Success(book);
@@ -62,16 +63,21 @@ public class BookService(AppDbContext db) : IBookService
     {
         try
         {
-            var book = await db.Books.FirstOrDefaultAsync(b => b.BookId == id, ct);
+            var book = await db.Books.FirstOrDefaultAsync(b => b.Id == id, ct);
             if (book is null)
                 return Result<Book>.Failure($"Book with id {id} not found");
 
             var isbnExists = await db.Books.AnyAsync(
-                b => b.IsbnNumber == command.IsbnNumber && b.BookId != id, ct);
+                b => b.IsbnNumber == command.IsbnNumber && b.Id != id, ct);
             if (isbnExists)
                 return Result<Book>.Failure($"A book with ISBN {command.IsbnNumber} already exists");
 
-            book.UpdateDetails(command.IsbnNumber, command.BookName, command.PageMaterial, command.PhotoUrl, command.PageCount);
+            var onLoan = book.TotalCopies - book.AvailableCopies;
+            if (command.TotalCopies < onLoan)
+                return Result<Book>.Failure($"Cannot set total copies to {command.TotalCopies} because {onLoan} copies are currently on loan");
+
+            var newAvailableCopies = command.TotalCopies - onLoan;
+            book.UpdateDetails(command.BookName, command.PageMaterial, command.PhotoUrl, command.PageCount, command.Price, command.TotalCopies, newAvailableCopies);
             book.ChangePrice(command.Price);
 
             await db.SaveChangesAsync(ct);
@@ -85,14 +91,12 @@ public class BookService(AppDbContext db) : IBookService
 
     public async Task<OperationResult> DeleteAsync(int id, CancellationToken ct)
     {
-        var book = await db.Books.FirstOrDefaultAsync(b => b.BookId == id, ct);
+        var book = await db.Books.FirstOrDefaultAsync(b => b.Id == id, ct);
         if (book is null)
             return OperationResult.Failure($"Book with id {id} not found");
 
-        var hasActiveCheckouts = await db.CheckoutItems
-            .AnyAsync(ci => ci.BookId == id && ci.Checkout.ReturnedAt == null, ct);
-        if (hasActiveCheckouts)
-            return OperationResult.Failure("Cannot delete a book that is currently checked out");
+        if (book.AvailableCopies != book.TotalCopies)
+            return OperationResult.Failure("Cannot delete a book with active checkouts");
 
         db.Books.Remove(book);
         await db.SaveChangesAsync(ct);

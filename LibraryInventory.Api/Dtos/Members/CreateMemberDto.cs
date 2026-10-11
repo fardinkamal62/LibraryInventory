@@ -1,4 +1,4 @@
-namespace LibraryInventory.Dtos.Members;
+namespace LibraryInventory.Api.Dtos.Members;
 
 /// <summary>
 /// Used by POST /api/members

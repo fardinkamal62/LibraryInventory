@@ -43,11 +43,11 @@ public class BooksController(IBookService bookService) : ControllerBase
 
         var command = new CreateBookCommand(
             dto.BookName, dto.Author, dto.IsbnNumber,
-            dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl);
+            dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl, dto.TotalCopies);
 
         var result = await bookService.CreateAsync(command, ct);
         return result.IsSuccess
-            ? CreatedAtAction(nameof(GetById), new { id = result.Data!.BookId }, ToDto(result.Data))
+            ? CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, ToDto(result.Data))
             : MapFailure(result.Message);
     }
 
@@ -64,7 +64,7 @@ public class BooksController(IBookService bookService) : ControllerBase
 
         var command = new UpdateBookCommand(
             dto.BookName, dto.Author, dto.IsbnNumber,
-            dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl);
+            dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl, dto.TotalCopies);
 
         var result = await bookService.UpdateAsync(id, command, ct);
         return result.IsSuccess
@@ -94,6 +94,6 @@ public class BooksController(IBookService bookService) : ControllerBase
     };
 
     private static BookResponseDto ToDto(Book b) =>
-        new(b.BookId, b.BookName, b.Author, b.IsbnNumber,
-            b.PageCount, b.Price, b.PageMaterial, b.PhotoUrl);
+        new(b.Id, b.BookName, b.Author, b.IsbnNumber,
+            b.PageCount, b.Price, b.PageMaterial, b.PhotoUrl, b.AvailableCopies);
 }

@@ -26,6 +26,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Register application services (interfaces live in Core, implementations in Infrastructure)
 builder.Services.AddScoped<IBookService, BookService>();
 builder.Services.AddScoped<IMemberService, MemberService>();
+builder.Services.AddScoped<ICheckoutService, CheckoutService>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

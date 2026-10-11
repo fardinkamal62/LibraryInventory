@@ -4,41 +4,51 @@ namespace LibraryInventory.Core.Entities;
 
 public class Checkout : BaseEntity
 {
-    public int CheckOutId { get; init; }
+    public int BookId { get; private set; }
+    public Book Book { get; private set; } = null!;
 
-    public DateTimeOffset CheckedOutAt { get; init; } = DateTimeOffset.UtcNow;
-
-    public DateTimeOffset? ReturnedAt { get; private set; }
-
-    // Foreign key
     public int MemberId { get; private set; }
-
-    // Navigation properties
     public Member Member { get; private set; } = null!;
 
-    public ICollection<CheckoutItem> Items { get; private set; } = [];
+    public DateTime CheckedOutAtUtc { get; private set; }
+    public DateTime DueDateUtc { get; private set; }
+    public DateTime? ReturnedAtUtc { get; private set; }
 
-    public ICollection<Book> Books => Items.Select(i => i.Book).ToList();
-
-    // EF Core needs a parameterless constructor
     private Checkout() { }
 
-    public Checkout(int memberId, IEnumerable<Book> books)
+    public Checkout(int bookId, int memberId, DateTime checkedOutAtUtc, DateTime dueDateUtc)
     {
-        if (books is null || !books.Any())
-            throw new ArgumentException("At least one book must be checked out", nameof(books));
+        ValidateUtc(checkedOutAtUtc, nameof(checkedOutAtUtc));
+        ValidateUtc(dueDateUtc, nameof(dueDateUtc));
 
+        if (dueDateUtc <= checkedOutAtUtc)
+            throw new ArgumentException("Due date must be after checkout date", nameof(dueDateUtc));
+
+        BookId = bookId;
         MemberId = memberId;
-        Items = books.Select(b => new CheckoutItem(b.BookId) { Book = b }).ToList();
+        CheckedOutAtUtc = checkedOutAtUtc;
+        DueDateUtc = dueDateUtc;
     }
 
-    // Domain behaviour
-    public void MarkReturned()
+    public bool IsActive => ReturnedAtUtc is null;
+    public bool IsOverdue => IsActive && DateTime.UtcNow > DueDateUtc;
+    public int DaysOverdue => IsOverdue
+        ? (int)Math.Ceiling((DateTime.UtcNow - DueDateUtc).TotalDays)
+        : 0;
+
+    public void MarkReturned(DateTime nowUtc)
     {
-        if (ReturnedAt is not null)
+        ValidateUtc(nowUtc, nameof(nowUtc));
+
+        if (ReturnedAtUtc is not null)
             throw new InvalidOperationException("This checkout has already been returned");
-        ReturnedAt = DateTimeOffset.UtcNow;
+
+        ReturnedAtUtc = nowUtc;
     }
 
-    public bool IsActive => ReturnedAt is null;
+    private static void ValidateUtc(DateTime value, string paramName)
+    {
+        if (value.Kind != DateTimeKind.Utc)
+            throw new ArgumentException("Value must be UTC", paramName);
+    }
 }

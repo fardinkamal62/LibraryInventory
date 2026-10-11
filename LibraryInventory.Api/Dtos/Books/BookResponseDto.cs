@@ -13,5 +13,6 @@ public record BookResponseDto(
     int PageCount,
     decimal Price,
     PageTypeEnum PageMaterial,
-    Uri PhotoUrl
+    Uri PhotoUrl,
+    int AvailableCopies
 );

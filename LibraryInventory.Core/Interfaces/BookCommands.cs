@@ -13,7 +13,8 @@ public record CreateBookCommand(
     int PageCount,
     decimal Price,
     PageTypeEnum PageMaterial,
-    Uri PhotoUrl
+    Uri PhotoUrl,
+    int TotalCopies
 );
 
 public record UpdateBookCommand(
@@ -23,5 +24,6 @@ public record UpdateBookCommand(
     int PageCount,
     decimal Price,
     PageTypeEnum PageMaterial,
-    Uri PhotoUrl
+    Uri PhotoUrl,
+    int TotalCopies
 );

@@ -16,7 +16,8 @@ public static class DbContextSeeder
                     464,
                     32.99m,
                     PageTypeEnum.Paperback,
-                    new Uri("https://example.com/clean-code.jpg")
+                    new Uri("https://m.media-amazon.com/images/S/compressed.photo.goodreads.com/books/1436202607i/3735293.jpg"),
+                    10
                 ),
                 new Book(
                     "The Pragmatic Programmer",
@@ -25,7 +26,8 @@ public static class DbContextSeeder
                     352,
                     29.99m,
                     PageTypeEnum.Paperback,
-                    new Uri("https://example.com/pragmatic.jpg")
+                    new Uri("https://pragprog.com/titles/tpp20/the-pragmatic-programmer-20th-anniversary-edition/tpp20_hu_ba8f44f3c17aea59.jpg"),
+                    5
                 )
             );
             await db.SaveChangesAsync(ct);

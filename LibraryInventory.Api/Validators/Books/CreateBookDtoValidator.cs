@@ -35,5 +35,8 @@ public class CreateBookDtoValidator : AbstractValidator<CreateBookDto>
             .NotNull()
             .Must(uri => uri == null || (uri.IsAbsoluteUri && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)))
             .WithMessage("PhotoUrl must be a valid absolute http/https URL");
+
+        RuleFor(x => x.TotalCopies)
+            .InclusiveBetween(1, 1000).WithMessage("Total copies must be between 1 and 1000");
     }
 }

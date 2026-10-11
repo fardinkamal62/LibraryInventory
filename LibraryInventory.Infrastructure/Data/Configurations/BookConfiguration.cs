@@ -8,9 +8,8 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
 {
     public void Configure(EntityTypeBuilder<Book> builder)
     {
-        builder.ToTable("Books");
-        builder.HasKey(b => b.BookId);
-        builder.Property(b => b.BookId).ValueGeneratedOnAdd();
+        builder.ToTable("Books", t => t.HasCheckConstraint("CK_Books_Copies",
+            "AvailableCopies >= 0 AND AvailableCopies <= TotalCopies"));
 
         builder.Property(b => b.BookName).IsRequired().HasMaxLength(255);
         builder.Property(b => b.Author).IsRequired().HasMaxLength(150);
@@ -21,5 +20,9 @@ public class BookConfiguration : IEntityTypeConfiguration<Book>
         builder.Property(b => b.Price).HasColumnType("decimal(10,2)").IsRequired();
         builder.Property(b => b.PageMaterial).HasConversion<string>();
         builder.Property(b => b.PhotoUrl).IsRequired();
+        builder.Property(b => b.TotalCopies).IsRequired();
+        builder.Property(b => b.AvailableCopies)
+            .IsRequired()
+            .IsConcurrencyToken();
     }
 }

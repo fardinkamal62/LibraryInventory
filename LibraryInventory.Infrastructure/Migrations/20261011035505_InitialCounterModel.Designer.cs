@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LibraryInventory.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260824054803_AddModelChanges")]
-    partial class AddModelChanges
+    [Migration("20261011035505_InitialCounterModel")]
+    partial class InitialCounterModel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -22,7 +22,7 @@ namespace LibraryInventory.Infrastructure.Migrations
 
             modelBuilder.Entity("LibraryInventory.Core.Entities.Book", b =>
                 {
-                    b.Property<int>("BookId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -31,19 +31,17 @@ namespace LibraryInventory.Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("AvailableCopies")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("BookName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("CheckoutId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("Id")
-                        .HasColumnType("INTEGER");
 
                     b.Property<string>("IsbnNumber")
                         .IsRequired()
@@ -64,14 +62,18 @@ namespace LibraryInventory.Infrastructure.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(10,2)");
 
-                    b.HasKey("BookId");
+                    b.Property<int>("TotalCopies")
+                        .HasColumnType("INTEGER");
 
-                    b.HasIndex("CheckoutId");
+                    b.HasKey("Id");
 
                     b.HasIndex("IsbnNumber")
                         .IsUnique();
 
-                    b.ToTable("Books", (string)null);
+                    b.ToTable("Books", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Books_Copies", "AvailableCopies >= 0 AND AvailableCopies <= TotalCopies");
+                        });
                 });
 
             modelBuilder.Entity("LibraryInventory.Core.Entities.Checkout", b =>
@@ -80,53 +82,33 @@ namespace LibraryInventory.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("CheckOutId")
+                    b.Property<int>("BookId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("CheckedOutAt")
+                    b.Property<DateTime>("CheckedOutAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("DueDateUtc")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("MemberId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset?>("ReturnedAt")
+                    b.Property<DateTime?>("ReturnedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("MemberId");
 
+                    b.HasIndex("BookId", "MemberId")
+                        .IsUnique()
+                        .HasFilter("ReturnedAtUtc IS NULL");
+
                     b.ToTable("Checkouts");
-                });
-
-            modelBuilder.Entity("LibraryInventory.Core.Entities.CheckoutItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("BookId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CheckoutId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CheckoutItemId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BookId");
-
-                    b.HasIndex("CheckoutId");
-
-                    b.ToTable("CheckoutItems");
                 });
 
             modelBuilder.Entity("LibraryInventory.Core.Entities.Member", b =>
@@ -146,9 +128,6 @@ namespace LibraryInventory.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("MemberId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("MemberName")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -162,48 +141,23 @@ namespace LibraryInventory.Infrastructure.Migrations
                     b.ToTable("Members");
                 });
 
-            modelBuilder.Entity("LibraryInventory.Core.Entities.Book", b =>
-                {
-                    b.HasOne("LibraryInventory.Core.Entities.Checkout", null)
-                        .WithMany("Books")
-                        .HasForeignKey("CheckoutId");
-                });
-
             modelBuilder.Entity("LibraryInventory.Core.Entities.Checkout", b =>
-                {
-                    b.HasOne("LibraryInventory.Core.Entities.Member", "Member")
-                        .WithMany()
-                        .HasForeignKey("MemberId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Member");
-                });
-
-            modelBuilder.Entity("LibraryInventory.Core.Entities.CheckoutItem", b =>
                 {
                     b.HasOne("LibraryInventory.Core.Entities.Book", "Book")
                         .WithMany()
                         .HasForeignKey("BookId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("LibraryInventory.Core.Entities.Checkout", "Checkout")
-                        .WithMany("Items")
-                        .HasForeignKey("CheckoutId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("LibraryInventory.Core.Entities.Member", "Member")
+                        .WithMany()
+                        .HasForeignKey("MemberId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Book");
 
-                    b.Navigation("Checkout");
-                });
-
-            modelBuilder.Entity("LibraryInventory.Core.Entities.Checkout", b =>
-                {
-                    b.Navigation("Books");
-
-                    b.Navigation("Items");
+                    b.Navigation("Member");
                 });
 #pragma warning restore 612, 618
         }

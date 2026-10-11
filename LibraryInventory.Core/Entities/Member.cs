@@ -5,8 +5,6 @@ namespace LibraryInventory.Core.Entities;
 
 public class Member(string memberName, string memberEmail) : BaseEntity
 {
-    public int MemberId { get; init; }
-
     public string MemberName { get; private set; } = memberName;
 
     public string MemberEmail { get; private set; } = memberEmail;
