@@ -1,16 +1,63 @@
 @LibraryInventory_HostAddress = http://localhost:5043/api
 
-
-# Fetch all books
-GET {{LibraryInventory_HostAddress}}/books/
+GET {{LibraryInventory_HostAddress}}/books?search=clean&page=1&pageSize=20
 Accept: application/json
 
 ###
-# Fetch a specific book by ID
-GET {{LibraryInventory_HostAddress}}/books/2
+GET {{LibraryInventory_HostAddress}}/books/1
 Accept: application/json
 
 ###
-# Fetch all members
-GET {{LibraryInventory_HostAddress}}/members/
+PUT {{LibraryInventory_HostAddress}}/books/1
+Content-Type: application/json
+
+{"bookName":"Clean Code","author":"Robert C. Martin","pageCount":464,"price":32.99,"pageMaterial":0,"photoUrl":"https://example.com/clean"}
+
+###
+DELETE {{LibraryInventory_HostAddress}}/books/1
+
+###
+POST {{LibraryInventory_HostAddress}}/books
+Content-Type: application/json
+
+{"bookName":"Domain-Driven Design","author":"Eric Evans","isbnNumber":"9780321125217","pageCount":560,"price":49.99,"pageMaterial":1,"photoUrl":"https://example.com/ddd"}
+
+###
+GET {{LibraryInventory_HostAddress}}/members?page=1&pageSize=20
+Accept: application/json
+
+###
+GET {{LibraryInventory_HostAddress}}/members/1
+Accept: application/json
+
+###
+POST {{LibraryInventory_HostAddress}}/members
+Content-Type: application/json
+
+{"memberName":"Carol Jones","email":"carol@example.com"}
+
+###
+PUT {{LibraryInventory_HostAddress}}/members/1
+Content-Type: application/json
+
+{"memberName":"Carol Jones","email":"carol@example.com"}
+
+###
+DELETE {{LibraryInventory_HostAddress}}/members/1
+
+###
+POST {{LibraryInventory_HostAddress}}/checkouts
+Content-Type: application/json
+
+{"bookId":1,"memberId":1}
+
+###
+GET {{LibraryInventory_HostAddress}}/checkouts/1
+Accept: application/json
+
+###
+PUT {{LibraryInventory_HostAddress}}/checkouts/1/return
+
+###
+GET {{LibraryInventory_HostAddress}}/checkouts/overdue
 Accept: application/json

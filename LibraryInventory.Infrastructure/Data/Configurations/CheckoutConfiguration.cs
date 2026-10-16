@@ -1,25 +1,3 @@
-using LibraryInventory.Core.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
+using LibraryInventory.Core.Entities; using Microsoft.EntityFrameworkCore; using Microsoft.EntityFrameworkCore.Metadata.Builders;
 namespace LibraryInventory.Infrastructure.Data.Configurations;
-
-public class CheckoutConfiguration : IEntityTypeConfiguration<Checkout>
-{
-    public void Configure(EntityTypeBuilder<Checkout> builder)
-    {
-        builder.HasOne(c => c.Book)
-            .WithMany()
-            .HasForeignKey(c => c.BookId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasOne(c => c.Member)
-            .WithMany()
-            .HasForeignKey(c => c.MemberId)
-            .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasIndex(c => new { c.BookId, c.MemberId })
-            .IsUnique()
-            .HasFilter("ReturnedAtUtc IS NULL");
-    }
-}
+public class CheckoutConfiguration:IEntityTypeConfiguration<Checkout>{public void Configure(EntityTypeBuilder<Checkout>b){b.ToTable("Checkouts");b.HasKey(x=>x.CheckoutId);b.HasOne(x=>x.Book).WithMany().HasForeignKey(x=>x.BookId).OnDelete(DeleteBehavior.Restrict);b.HasOne(x=>x.Member).WithMany().HasForeignKey(x=>x.MemberId).OnDelete(DeleteBehavior.Restrict);b.HasIndex(x=>x.BookId).IsUnique().HasFilter("ReturnedAtUtc IS NULL");b.HasIndex(x=>new{x.MemberId,x.ReturnedAtUtc});}}

@@ -19,7 +19,7 @@ namespace LibraryInventory.Infrastructure.Migrations
 
             modelBuilder.Entity("LibraryInventory.Core.Entities.Book", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("BookId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -28,16 +28,12 @@ namespace LibraryInventory.Infrastructure.Migrations
                         .HasMaxLength(150)
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("AvailableCopies")
-                        .IsConcurrencyToken()
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("BookName")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("IsbnNumber")
@@ -59,23 +55,17 @@ namespace LibraryInventory.Infrastructure.Migrations
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(10,2)");
 
-                    b.Property<int>("TotalCopies")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
+                    b.HasKey("BookId");
 
                     b.HasIndex("IsbnNumber")
                         .IsUnique();
 
-                    b.ToTable("Books", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_Books_Copies", "AvailableCopies >= 0 AND AvailableCopies <= TotalCopies");
-                        });
+                    b.ToTable("Books", (string)null);
                 });
 
             modelBuilder.Entity("LibraryInventory.Core.Entities.Checkout", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("CheckoutId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
@@ -85,7 +75,7 @@ namespace LibraryInventory.Infrastructure.Migrations
                     b.Property<DateTime>("CheckedOutAtUtc")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("DueDateUtc")
@@ -97,45 +87,42 @@ namespace LibraryInventory.Infrastructure.Migrations
                     b.Property<DateTime?>("ReturnedAtUtc")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
+                    b.HasKey("CheckoutId");
 
-                    b.HasIndex("MemberId");
-
-                    b.HasIndex("BookId", "MemberId")
+                    b.HasIndex("BookId")
                         .IsUnique()
                         .HasFilter("ReturnedAtUtc IS NULL");
 
-                    b.ToTable("Checkouts");
+                    b.HasIndex("MemberId", "ReturnedAtUtc");
+
+                    b.ToTable("Checkouts", (string)null);
                 });
 
             modelBuilder.Entity("LibraryInventory.Core.Entities.Member", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("MemberId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("MemberAddress")
+                    b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("MemberEmail")
-                        .IsRequired()
+                        .HasMaxLength(150)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("MemberName")
                         .IsRequired()
+                        .HasMaxLength(255)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PhotoUrl")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
+                    b.HasKey("MemberId");
 
-                    b.HasKey("Id");
+                    b.HasIndex("Email")
+                        .IsUnique();
 
-                    b.ToTable("Members");
+                    b.ToTable("Members", (string)null);
                 });
 
             modelBuilder.Entity("LibraryInventory.Core.Entities.Checkout", b =>

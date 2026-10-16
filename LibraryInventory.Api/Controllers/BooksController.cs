@@ -1,99 +1,64 @@
-using FluentValidation;
-using LibraryInventory.Api.Dtos.Books;
-using LibraryInventory.Core.Entities;
-using LibraryInventory.Core.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-
+using FluentValidation; using LibraryInventory.Api.Dtos.Books; using LibraryInventory.Api.Extensions; using LibraryInventory.Core.Commands; using LibraryInventory.Core.Entities; using LibraryInventory.Core.Interfaces; using Microsoft.AspNetCore.Mvc;
 namespace LibraryInventory.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class BooksController(IBookService bookService) : ControllerBase
+public class BooksController(IBookService service) : ControllerBase
 {
-    /// <summary>GET /api/books — list all books (with pagination).</summary>
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<BookResponseDto>>> GetAll(
-        [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 20,
-        CancellationToken ct = default)
+    public async Task<IActionResult> GetAll(string? search, bool? available, int page = 1,
+        int pageSize = 20, CancellationToken ct = default)
     {
-        var books = await bookService.GetAllAsync(page, pageSize, ct);
-        return Ok(books.Select(ToDto));
+        var result = await service.GetAllAsync(new BookQuery(search, available, page, pageSize), ct);
+        return Ok(new { items = result.Items.Select(ToListDto), result.Page, result.PageSize, result.TotalCount });
     }
 
-    /// <summary>GET /api/books/{id} — fetch a single book.</summary>
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<BookResponseDto>> GetById(int id, CancellationToken ct)
+    [HttpGet("{id:int}", Name = "GetBook")]
+    public async Task<IActionResult> GetById(int id, CancellationToken ct)
     {
-        var result = await bookService.GetByIdAsync(id, ct);
-        return result.IsSuccess
-            ? Ok(ToDto(result.Data!))
-            : NotFound(new { error = result.Message });
+        var result = await service.GetByIdAsync(id, ct);
+        return result.IsSuccess ? Ok(ToListDto(result.Data!)) : this.ToFailure(result.Error, result.Message);
     }
 
-    /// <summary>POST /api/books — create a new book.</summary>
     [HttpPost]
-    public async Task<IActionResult> Create(
-        [FromBody] CreateBookDto dto,
-        [FromServices] IValidator<CreateBookDto> validator,
+    public async Task<IActionResult> Create(CreateBookDto dto, IValidator<CreateBookDto> validator, CancellationToken ct)
+    {
+        var validation = await validator.ValidateAsync(dto, ct);
+        if (!validation.IsValid) return this.ToValidationProblem(validation);
+
+        var result = await service.CreateAsync(
+            new(dto.BookName, dto.Author, dto.IsbnNumber, dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl), ct);
+        return result.IsSuccess
+            ? CreatedAtRoute("GetBook", new { id = result.Data!.Book.BookId }, ToResponseDto(result.Data.Book))
+            : this.ToFailure(result.Error, result.Message);
+    }
+
+    [HttpPut("{id:int}", Name = "UpdateBook")]
+    public async Task<IActionResult> Update(int id, UpdateBookDto dto, IValidator<UpdateBookDto> validator,
         CancellationToken ct)
     {
         var validation = await validator.ValidateAsync(dto, ct);
-        if (!validation.IsValid) return BadRequest(validation.Errors);
+        if (!validation.IsValid) return this.ToValidationProblem(validation);
 
-        var command = new CreateBookCommand(
-            dto.BookName, dto.Author, dto.IsbnNumber,
-            dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl, dto.TotalCopies);
-
-        var result = await bookService.CreateAsync(command, ct);
+        var result = await service.UpdateAsync(id,
+            new(dto.BookName, dto.Author, dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl), ct);
         return result.IsSuccess
-            ? CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, ToDto(result.Data))
-            : MapFailure(result.Message);
+            ? Ok(ToResponseDto(result.Data!.Book))
+            : this.ToFailure(result.Error, result.Message);
     }
 
-    /// <summary>PUT /api/books/{id} — full update.</summary>
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(
-        int id,
-        [FromBody] UpdateBookDto dto,
-        [FromServices] IValidator<UpdateBookDto> validator,
-        CancellationToken ct)
-    {
-        var validation = await validator.ValidateAsync(dto, ct);
-        if (!validation.IsValid) return BadRequest(validation.Errors);
-
-        var command = new UpdateBookCommand(
-            dto.BookName, dto.Author, dto.IsbnNumber,
-            dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl, dto.TotalCopies);
-
-        var result = await bookService.UpdateAsync(id, command, ct);
-        return result.IsSuccess
-            ? Ok(ToDto(result.Data!))
-            : MapFailure(result.Message);
-    }
-
-    /// <summary>DELETE /api/books/{id} — remove a book.</summary>
-    [HttpDelete("{id:int}")]
+    [HttpDelete("{id:int}", Name = "DeleteBook")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
-        var result = await bookService.DeleteAsync(id, ct);
-        return result.IsSuccess
-            ? NoContent()
-            : MapFailure(result.Message);
+        var result = await service.DeleteAsync(id, ct);
+        return result.IsSuccess ? NoContent() : this.ToFailure(result.Error, result.Message);
     }
 
-    // Translates a service failure message to the right HTTP status code.
-    private IActionResult MapFailure(string message) => message switch
-    {
-        var m when m.Contains("not found", StringComparison.OrdinalIgnoreCase) =>
-            NotFound(new { error = message }),
-        var m when m.Contains("already exists", StringComparison.OrdinalIgnoreCase) ||
-                  m.Contains("currently checked out", StringComparison.OrdinalIgnoreCase) =>
-            Conflict(new { error = message }),
-        _ => BadRequest(new { error = message })
-    };
+    private static BookListItemDto ToListDto(BookWithAvailability item) =>
+        new(item.Book.BookId, item.Book.BookName, item.Book.Author, item.Book.IsbnNumber,
+            item.Book.PageCount, item.Book.Price, item.Book.PageMaterial, item.Book.PhotoUrl, item.Available);
 
-    private static BookResponseDto ToDto(Book b) =>
-        new(b.Id, b.BookName, b.Author, b.IsbnNumber,
-            b.PageCount, b.Price, b.PageMaterial, b.PhotoUrl, b.AvailableCopies);
+    private static BookResponseDto ToResponseDto(Book book) =>
+        new(book.BookId, book.BookName, book.Author, book.IsbnNumber, book.PageCount,
+            book.Price, book.PageMaterial, book.PhotoUrl);
 }

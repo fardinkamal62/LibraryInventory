@@ -26,12 +26,11 @@ LibraryInventory/
 | Area | Status | Notes |
 |------|--------|-------|
 | Book CRUD (`/api/books`) | ✅ Implemented | List/get/create/update/delete with validation and unique ISBN rule |
-| Member list (`/api/members`) | ✅ Implemented | Paginated listing endpoint available |
-| Member create/update/delete | ⚠️ Partially implemented | Service layer exists; controller endpoints are not fully exposed yet |
-| Checkout/return workflow | ❌ Not implemented | Planned from PRD but endpoints/services are pending |
-| Overdue reporting | ❌ Not implemented | Planned from PRD but pending |
-| Custom middleware (logging/exception handling) | ❌ Not implemented | Planned from PRD but pending |
-| `LibrarySettings` via `IOptions<T>` | ❌ Not implemented | Planned configuration enhancement |
+| Member endpoints (`/api/members`) | ✅ Implemented | Paged list, get, create, update and delete |
+| Checkout/return workflow | ✅ Implemented | Database-enforced one active checkout per book |
+| Overdue reporting | ✅ Implemented | `/api/checkouts/overdue` |
+| Book search/availability/paging | ✅ Implemented | `search`, `available`, `page`, `pageSize` |
+| `LibrarySettings` via `IOptions<T>` | ✅ Implemented | Standard/Extended due-date strategies |
 
 ## Planned API Scope (from PRD)
 
@@ -77,10 +76,41 @@ On startup, EF Core migrations are applied automatically and seed data is insert
 
 In Development, OpenAPI is mapped by the API project. Run locally and open the exposed OpenAPI endpoint from the application URL output.
 
+## API examples
+
+With the API running at `http://localhost:5043`:
+
+```bash
+curl http://localhost:5043/api/books
+curl 'http://localhost:5043/api/books?search=clean&available=true&page=1&pageSize=20'
+curl http://localhost:5043/api/books/1
+curl -X POST http://localhost:5043/api/books -H 'Content-Type: application/json' \
+  -d '{"bookName":"Domain-Driven Design","author":"Eric Evans","isbnNumber":"9780321125217","pageCount":560,"price":49.99,"pageMaterial":1,"photoUrl":"https://example.com/ddd"}'
+curl -X PUT http://localhost:5043/api/books/1 -H 'Content-Type: application/json' \
+  -d '{"bookName":"Clean Code","author":"Robert C. Martin","pageCount":464,"price":32.99,"pageMaterial":0,"photoUrl":"https://example.com/clean"}'
+curl -X DELETE http://localhost:5043/api/books/1
+curl 'http://localhost:5043/api/members?page=1&pageSize=20'
+curl http://localhost:5043/api/members/1
+curl -X POST http://localhost:5043/api/members -H 'Content-Type: application/json' \
+  -d '{"memberName":"Carol Jones","email":"carol@example.com"}'
+curl -X PUT http://localhost:5043/api/members/1 -H 'Content-Type: application/json' \
+  -d '{"memberName":"Carol Jones","email":"carol@example.com"}'
+curl -X DELETE http://localhost:5043/api/members/1
+curl -X POST http://localhost:5043/api/checkouts -H 'Content-Type: application/json' \
+  -d '{"bookId":1,"memberId":1}'
+curl http://localhost:5043/api/checkouts/1
+curl -X PUT http://localhost:5043/api/checkouts/1/return
+curl http://localhost:5043/api/checkouts/overdue
+```
+
 ## Configuration
 
 `LibraryInventory.Api/appsettings.json` includes:
 
 - `ConnectionStrings:DefaultConnection` (SQLite file path: `App_Data/library.db`)
 
-Future iterations will add `LibrarySettings` (e.g., `MaxCheckoutDays`, `MaxBooksPerMember`) and consume them with `IOptions<T>`.
+`LibrarySettings` is bound from configuration with `MaxCheckoutDays`, `MaxBooksPerMember`, `DueDatePolicy` (`Standard` or `Extended`) and `ExtendedLoanMultiplier`.
+
+### Business-rule limitations
+
+The member checkout limit is a count check and can be exceeded by simultaneous requests; the filtered unique SQLite index guarantees only one active checkout per book. SQLite also serializes concurrent writers. Apply migrations with `dotnet ef database update --project LibraryInventory.Infrastructure --startup-project LibraryInventory.Api` (the API applies them automatically at startup).
