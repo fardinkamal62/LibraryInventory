@@ -1,10 +1,77 @@
-using LibraryInventory.Core.Commands; using LibraryInventory.Core.Common; using LibraryInventory.Core.Entities; using LibraryInventory.Core.Interfaces; using LibraryInventory.Infrastructure.Data; using Microsoft.EntityFrameworkCore;
+using LibraryInventory.Core.Commands;
+using LibraryInventory.Core.Common;
+using LibraryInventory.Core.Entities;
+using LibraryInventory.Core.Interfaces;
+using LibraryInventory.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace LibraryInventory.Infrastructure.Services;
-public class MemberService(AppDbContext db):IMemberService
+
+public class MemberService(AppDbContext db) : IMemberService
 {
- public async Task<Result<Member>> CreateAsync(CreateMemberCommand c,CancellationToken ct){var email=c.Email.Trim().ToLowerInvariant();if(await db.Members.AnyAsync(x=>x.Email==email,ct))return Result<Member>.Conflict($"A member with email {email} already exists");try{var m=new Member(c.MemberName,email);db.Members.Add(m);await db.SaveChangesAsync(ct);return Result<Member>.Success(m,"Member registered");}catch(ArgumentException e){return Result<Member>.Validation(e.Message);}catch(DbUpdateException e)when(e.IsUniqueViolation()){return Result<Member>.Conflict($"A member with email {email} already exists");}}
- public async Task<Result<Member>> GetByIdAsync(int id,CancellationToken ct){var m=await db.Members.AsNoTracking().FirstOrDefaultAsync(x=>x.MemberId==id,ct);return m is null?Result<Member>.NotFound($"Member {id} not found"):Result<Member>.Success(m);}
- public async Task<PagedResult<Member>> GetAllAsync(int page,int size,CancellationToken ct){(page,size)=Paging.Normalize(page,size);var q=db.Members.AsNoTracking().OrderBy(x=>x.MemberId);var total=await q.CountAsync(ct);return new(await q.Skip((page-1)*size).Take(size).ToListAsync(ct),page,size,total);}
- public async Task<Result<Member>> UpdateAsync(int id,UpdateMemberCommand c,CancellationToken ct){var m=await db.Members.FirstOrDefaultAsync(x=>x.MemberId==id,ct);if(m is null)return Result<Member>.NotFound($"Member {id} not found");var email=c.Email.Trim().ToLowerInvariant();if(await db.Members.AnyAsync(x=>x.Email==email&&x.MemberId!=id,ct))return Result<Member>.Conflict($"A member with email {email} already exists");try{m.UpdateDetails(c.MemberName,email);await db.SaveChangesAsync(ct);return Result<Member>.Success(m,"Member updated");}catch(ArgumentException e){return Result<Member>.Validation(e.Message);}}
- public async Task<OperationResult> DeleteAsync(int id,CancellationToken ct){var m=await db.Members.FirstOrDefaultAsync(x=>x.MemberId==id,ct);if(m is null)return OperationResult.NotFound($"Member {id} not found");if(await db.Checkouts.AnyAsync(x=>x.MemberId==id,ct))return OperationResult.Conflict("Cannot delete a member with checkout history");db.Members.Remove(m);await db.SaveChangesAsync(ct);return OperationResult.Success("Member deleted");}
+    public async Task<Result<Member>> CreateAsync(CreateMemberCommand c, CancellationToken ct)
+    {
+        var email = c.Email.Trim().ToLowerInvariant();
+        if (await db.Members.AnyAsync(x => x.Email == email, ct))
+            return Result<Member>.Conflict($"A member with email {email} already exists");
+        try
+        {
+            var m = new Member(c.MemberName, email);
+            db.Members.Add(m);
+            await db.SaveChangesAsync(ct);
+            return Result<Member>.Success(m, "Member registered");
+        }
+        catch (ArgumentException e)
+        {
+            return Result<Member>.Validation(e.Message);
+        }
+        catch (DbUpdateException e)when (e.IsUniqueViolation())
+        {
+            return Result<Member>.Conflict($"A member with email {email} already exists");
+        }
+    }
+
+    public async Task<Result<Member>> GetByIdAsync(int id, CancellationToken ct)
+    {
+        var m = await db.Members.AsNoTracking().FirstOrDefaultAsync(x => x.MemberId == id, ct);
+        return m is null ? Result<Member>.NotFound($"Member {id} not found") : Result<Member>.Success(m);
+    }
+
+    public async Task<PagedResult<Member>> GetAllAsync(int page, int size, CancellationToken ct)
+    {
+        (page, size) = Paging.Normalize(page, size);
+        var q = db.Members.AsNoTracking().OrderBy(x => x.MemberId);
+        var total = await q.CountAsync(ct);
+        return new PagedResult<Member>(await q.Skip((page - 1) * size).Take(size).ToListAsync(ct), page, size, total);
+    }
+
+    public async Task<Result<Member>> UpdateAsync(int id, UpdateMemberCommand c, CancellationToken ct)
+    {
+        var m = await db.Members.FirstOrDefaultAsync(x => x.MemberId == id, ct);
+        if (m is null) return Result<Member>.NotFound($"Member {id} not found");
+        var email = c.Email.Trim().ToLowerInvariant();
+        if (await db.Members.AnyAsync(x => x.Email == email && x.MemberId != id, ct))
+            return Result<Member>.Conflict($"A member with email {email} already exists");
+        try
+        {
+            m.UpdateDetails(c.MemberName, email);
+            await db.SaveChangesAsync(ct);
+            return Result<Member>.Success(m, "Member updated");
+        }
+        catch (ArgumentException e)
+        {
+            return Result<Member>.Validation(e.Message);
+        }
+    }
+
+    public async Task<OperationResult> DeleteAsync(int id, CancellationToken ct)
+    {
+        var m = await db.Members.FirstOrDefaultAsync(x => x.MemberId == id, ct);
+        if (m is null) return OperationResult.NotFound($"Member {id} not found");
+        if (await db.Checkouts.AnyAsync(x => x.MemberId == id, ct))
+            return OperationResult.Conflict("Cannot delete a member with checkout history");
+        db.Members.Remove(m);
+        await db.SaveChangesAsync(ct);
+        return OperationResult.Success("Member deleted");
+    }
 }

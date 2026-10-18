@@ -1,10 +1,90 @@
-using LibraryInventory.Core.Commands; using LibraryInventory.Core.Common; using LibraryInventory.Core.Entities; using LibraryInventory.Core.Interfaces; using LibraryInventory.Infrastructure.Data; using Microsoft.EntityFrameworkCore;
+using LibraryInventory.Core.Commands;
+using LibraryInventory.Core.Common;
+using LibraryInventory.Core.Entities;
+using LibraryInventory.Core.Interfaces;
+using LibraryInventory.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
 namespace LibraryInventory.Infrastructure.Services;
-public class BookService(AppDbContext db):IBookService
+
+public class BookService(AppDbContext db) : IBookService
 {
- public async Task<Result<BookWithAvailability>> CreateAsync(CreateBookCommand c,CancellationToken ct){if(await db.Books.AnyAsync(x=>x.IsbnNumber==c.IsbnNumber.Trim(),ct))return Result<BookWithAvailability>.Conflict("A book with this ISBN already exists");try{var b=new Book(c.BookName,c.Author,c.IsbnNumber,c.PageCount,c.Price,c.PageMaterial,c.PhotoUrl);db.Books.Add(b);await db.SaveChangesAsync(ct);return Result<BookWithAvailability>.Success(new(b,true),"Book created");}catch(ArgumentException e){return Result<BookWithAvailability>.Validation(e.Message);}catch(DbUpdateException e)when(e.IsUniqueViolation()){return Result<BookWithAvailability>.Conflict("A book with this ISBN already exists");}}
- public async Task<Result<BookWithAvailability>> GetByIdAsync(int id,CancellationToken ct){var x=await db.Books.AsNoTracking().Where(b=>b.BookId==id).Select(b=>new{Book=b,Available=!db.Checkouts.Any(c=>c.BookId==b.BookId&&c.ReturnedAtUtc==null)}).FirstOrDefaultAsync(ct);return x is null?Result<BookWithAvailability>.NotFound($"Book {id} not found"):Result<BookWithAvailability>.Success(new(x.Book,x.Available));}
- public async Task<PagedResult<BookWithAvailability>> GetAllAsync(BookQuery q,CancellationToken ct){var(p,s)=Paging.Normalize(q.Page,q.PageSize);var rows=db.Books.AsNoTracking().Select(b=>new{Book=b,Available=!db.Checkouts.Any(c=>c.BookId==b.BookId&&c.ReturnedAtUtc==null)});if(!string.IsNullOrWhiteSpace(q.Search)){var t=$"%{q.Search.Trim()}%";rows=rows.Where(x=>EF.Functions.Like(x.Book.BookName,t)||EF.Functions.Like(x.Book.Author,t)||EF.Functions.Like(x.Book.IsbnNumber,t));}if(q.Available is bool a)rows=rows.Where(x=>x.Available==a);var total=await rows.CountAsync(ct);var items=await rows.OrderBy(x=>x.Book.BookId).Skip((p-1)*s).Take(s).ToListAsync(ct);return new(items.Select(x=>new BookWithAvailability(x.Book,x.Available)).ToList(),p,s,total);}
- public async Task<Result<BookWithAvailability>> UpdateAsync(int id,UpdateBookCommand c,CancellationToken ct){var b=await db.Books.FirstOrDefaultAsync(x=>x.BookId==id,ct);if(b is null)return Result<BookWithAvailability>.NotFound($"Book {id} not found");try{b.UpdateDetails(c.BookName,c.Author,c.PageCount,c.PageMaterial,c.PhotoUrl);b.ChangePrice(c.Price);await db.SaveChangesAsync(ct);return Result<BookWithAvailability>.Success(new(b,true),"Book updated");}catch(ArgumentException e){return Result<BookWithAvailability>.Validation(e.Message);}}
- public async Task<OperationResult> DeleteAsync(int id,CancellationToken ct){var b=await db.Books.FirstOrDefaultAsync(x=>x.BookId==id,ct);if(b is null)return OperationResult.NotFound($"Book {id} not found");if(await db.Checkouts.AnyAsync(c=>c.BookId==id,ct))return OperationResult.Conflict("Cannot delete a book with checkout history");db.Books.Remove(b);await db.SaveChangesAsync(ct);return OperationResult.Success("Book deleted");}
+    public async Task<Result<BookWithAvailability>> CreateAsync(CreateBookCommand c, CancellationToken ct)
+    {
+        if (await db.Books.AnyAsync(x => x.IsbnNumber == c.IsbnNumber.Trim(), ct))
+            return Result<BookWithAvailability>.Conflict("A book with this ISBN already exists");
+        try
+        {
+            var b = new Book(c.BookName, c.Author, c.IsbnNumber, c.PageCount, c.Price, c.PageMaterial, c.PhotoUrl);
+            db.Books.Add(b);
+            await db.SaveChangesAsync(ct);
+            return Result<BookWithAvailability>.Success(new BookWithAvailability(b, true), "Book created");
+        }
+        catch (ArgumentException e)
+        {
+            return Result<BookWithAvailability>.Validation(e.Message);
+        }
+        catch (DbUpdateException e)when (e.IsUniqueViolation())
+        {
+            return Result<BookWithAvailability>.Conflict("A book with this ISBN already exists");
+        }
+    }
+
+    public async Task<Result<BookWithAvailability>> GetByIdAsync(int id, CancellationToken ct)
+    {
+        var x = await db.Books.AsNoTracking().Where(b => b.BookId == id).Select(b => new
+                { Book = b, Available = !db.Checkouts.Any(c => c.BookId == b.BookId && c.ReturnedAtUtc == null) })
+            .FirstOrDefaultAsync(ct);
+        return x is null
+            ? Result<BookWithAvailability>.NotFound($"Book {id} not found")
+            : Result<BookWithAvailability>.Success(new BookWithAvailability(x.Book, x.Available));
+    }
+
+    public async Task<PagedResult<BookWithAvailability>> GetAllAsync(BookQuery q, CancellationToken ct)
+    {
+        var (p, s) = Paging.Normalize(q.Page, q.PageSize);
+        var rows = db.Books.AsNoTracking().Select(b => new
+            { Book = b, Available = !db.Checkouts.Any(c => c.BookId == b.BookId && c.ReturnedAtUtc == null) });
+        if (!string.IsNullOrWhiteSpace(q.Search))
+        {
+            var t = $"%{q.Search.Trim()}%";
+            rows = rows.Where(x =>
+                EF.Functions.Like(x.Book.BookName, t) || EF.Functions.Like(x.Book.Author, t) ||
+                EF.Functions.Like(x.Book.IsbnNumber, t));
+        }
+
+        if (q.Available is bool a) rows = rows.Where(x => x.Available == a);
+        var total = await rows.CountAsync(ct);
+        var items = await rows.OrderBy(x => x.Book.BookId).Skip((p - 1) * s).Take(s).ToListAsync(ct);
+        return new PagedResult<BookWithAvailability>(
+            items.Select(x => new BookWithAvailability(x.Book, x.Available)).ToList(), p, s, total);
+    }
+
+    public async Task<Result<BookWithAvailability>> UpdateAsync(int id, UpdateBookCommand c, CancellationToken ct)
+    {
+        var b = await db.Books.FirstOrDefaultAsync(x => x.BookId == id, ct);
+        if (b is null) return Result<BookWithAvailability>.NotFound($"Book {id} not found");
+        try
+        {
+            b.UpdateDetails(c.BookName, c.Author, c.PageCount, c.PageMaterial, c.PhotoUrl);
+            b.ChangePrice(c.Price);
+            await db.SaveChangesAsync(ct);
+            return Result<BookWithAvailability>.Success(new BookWithAvailability(b, true), "Book updated");
+        }
+        catch (ArgumentException e)
+        {
+            return Result<BookWithAvailability>.Validation(e.Message);
+        }
+    }
+
+    public async Task<OperationResult> DeleteAsync(int id, CancellationToken ct)
+    {
+        var b = await db.Books.FirstOrDefaultAsync(x => x.BookId == id, ct);
+        if (b is null) return OperationResult.NotFound($"Book {id} not found");
+        if (await db.Checkouts.AnyAsync(c => c.BookId == id, ct))
+            return OperationResult.Conflict("Cannot delete a book with checkout history");
+        db.Books.Remove(b);
+        await db.SaveChangesAsync(ct);
+        return OperationResult.Success("Book deleted");
+    }
 }

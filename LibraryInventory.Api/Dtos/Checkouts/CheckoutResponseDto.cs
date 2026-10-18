@@ -1,1 +1,11 @@
-namespace LibraryInventory.Api.Dtos.Checkouts; public record CheckoutResponseDto(int CheckoutId,int BookId,int MemberId,DateTime CheckedOutAtUtc,DateTime DueDateUtc,DateTime? ReturnedAtUtc,bool IsOverdue,int DaysOverdue);
+namespace LibraryInventory.Api.Dtos.Checkouts;
+
+public record CheckoutResponseDto(
+    int CheckoutId,
+    int BookId,
+    int MemberId,
+    DateTime CheckedOutAtUtc,
+    DateTime DueDateUtc,
+    DateTime? ReturnedAtUtc,
+    bool IsOverdue,
+    int DaysOverdue);

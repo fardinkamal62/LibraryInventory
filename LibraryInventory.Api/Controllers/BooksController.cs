@@ -1,4 +1,11 @@
-using FluentValidation; using LibraryInventory.Api.Dtos.Books; using LibraryInventory.Api.Extensions; using LibraryInventory.Core.Commands; using LibraryInventory.Core.Entities; using LibraryInventory.Core.Interfaces; using Microsoft.AspNetCore.Mvc;
+using FluentValidation;
+using LibraryInventory.Api.Dtos.Books;
+using LibraryInventory.Api.Extensions;
+using LibraryInventory.Core.Commands;
+using LibraryInventory.Core.Entities;
+using LibraryInventory.Core.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+
 namespace LibraryInventory.Api.Controllers;
 
 [ApiController]
@@ -21,13 +28,15 @@ public class BooksController(IBookService service) : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateBookDto dto, IValidator<CreateBookDto> validator, CancellationToken ct)
+    public async Task<IActionResult> Create(CreateBookDto dto, IValidator<CreateBookDto> validator,
+        CancellationToken ct)
     {
         var validation = await validator.ValidateAsync(dto, ct);
         if (!validation.IsValid) return this.ToValidationProblem(validation);
 
         var result = await service.CreateAsync(
-            new(dto.BookName, dto.Author, dto.IsbnNumber, dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl), ct);
+            new CreateBookCommand(dto.BookName, dto.Author, dto.IsbnNumber, dto.PageCount, dto.Price, dto.PageMaterial,
+                dto.PhotoUrl), ct);
         return result.IsSuccess
             ? CreatedAtRoute("GetBook", new { id = result.Data!.Book.BookId }, ToResponseDto(result.Data.Book))
             : this.ToFailure(result.Error, result.Message);
@@ -41,7 +50,8 @@ public class BooksController(IBookService service) : ControllerBase
         if (!validation.IsValid) return this.ToValidationProblem(validation);
 
         var result = await service.UpdateAsync(id,
-            new(dto.BookName, dto.Author, dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl), ct);
+            new UpdateBookCommand(dto.BookName, dto.Author, dto.PageCount, dto.Price, dto.PageMaterial, dto.PhotoUrl),
+            ct);
         return result.IsSuccess
             ? Ok(ToResponseDto(result.Data!.Book))
             : this.ToFailure(result.Error, result.Message);
@@ -54,11 +64,15 @@ public class BooksController(IBookService service) : ControllerBase
         return result.IsSuccess ? NoContent() : this.ToFailure(result.Error, result.Message);
     }
 
-    private static BookListItemDto ToListDto(BookWithAvailability item) =>
-        new(item.Book.BookId, item.Book.BookName, item.Book.Author, item.Book.IsbnNumber,
+    private static BookListItemDto ToListDto(BookWithAvailability item)
+    {
+        return new BookListItemDto(item.Book.BookId, item.Book.BookName, item.Book.Author, item.Book.IsbnNumber,
             item.Book.PageCount, item.Book.Price, item.Book.PageMaterial, item.Book.PhotoUrl, item.Available);
+    }
 
-    private static BookResponseDto ToResponseDto(Book book) =>
-        new(book.BookId, book.BookName, book.Author, book.IsbnNumber, book.PageCount,
+    private static BookResponseDto ToResponseDto(Book book)
+    {
+        return new BookResponseDto(book.BookId, book.BookName, book.Author, book.IsbnNumber, book.PageCount,
             book.Price, book.PageMaterial, book.PhotoUrl);
+    }
 }

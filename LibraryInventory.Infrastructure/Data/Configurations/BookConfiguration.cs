@@ -1,3 +1,21 @@
-using LibraryInventory.Core.Entities; using Microsoft.EntityFrameworkCore; using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using LibraryInventory.Core.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
 namespace LibraryInventory.Infrastructure.Data.Configurations;
-public class BookConfiguration:IEntityTypeConfiguration<Book>{public void Configure(EntityTypeBuilder<Book>b){b.ToTable("Books");b.HasKey(x=>x.BookId);b.Property(x=>x.BookName).IsRequired().HasMaxLength(255);b.Property(x=>x.Author).IsRequired().HasMaxLength(150);b.Property(x=>x.IsbnNumber).IsRequired().HasMaxLength(13);b.HasIndex(x=>x.IsbnNumber).IsUnique();b.Property(x=>x.Price).HasColumnType("decimal(10,2)");b.Property(x=>x.PageMaterial).HasConversion<string>();b.Property(x=>x.PhotoUrl).IsRequired();}}
+
+public class BookConfiguration : IEntityTypeConfiguration<Book>
+{
+    public void Configure(EntityTypeBuilder<Book> b)
+    {
+        b.ToTable("Books");
+        b.HasKey(x => x.BookId);
+        b.Property(x => x.BookName).IsRequired().HasMaxLength(255);
+        b.Property(x => x.Author).IsRequired().HasMaxLength(150);
+        b.Property(x => x.IsbnNumber).IsRequired().HasMaxLength(13);
+        b.HasIndex(x => x.IsbnNumber).IsUnique();
+        b.Property(x => x.Price).HasColumnType("decimal(10,2)");
+        b.Property(x => x.PageMaterial).HasConversion<string>();
+        b.Property(x => x.PhotoUrl).IsRequired();
+    }
+}

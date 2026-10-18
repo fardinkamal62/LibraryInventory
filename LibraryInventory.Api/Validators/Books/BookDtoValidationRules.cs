@@ -1,6 +1,6 @@
+using System.Linq.Expressions;
 using FluentValidation;
 using LibraryInventory.Core.Entities;
-using System.Linq.Expressions;
 
 namespace LibraryInventory.Api.Validators.Books;
 
@@ -22,8 +22,10 @@ internal static class BookDtoValidationRules
         validator.RuleFor(photoUrl).Must(IsHttpUrl);
     }
 
-    private static bool IsHttpUrl(Uri? uri) =>
-        uri is not null &&
-        uri.IsAbsoluteUri &&
-        (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    private static bool IsHttpUrl(Uri? uri)
+    {
+        return uri is not null &&
+               uri.IsAbsoluteUri &&
+               (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+    }
 }

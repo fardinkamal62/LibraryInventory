@@ -1,7 +1,7 @@
 namespace LibraryInventory.Api.Dtos.Members;
 
 /// <summary>
-/// Used by POST /api/members
+///     Used by POST /api/members
 /// </summary>
 public record CreateMemberDto(
     string MemberName,

@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-      <ProjectReference Include="..\LibraryInventory.Core\LibraryInventory.Core.csproj" />
+        <ProjectReference Include="..\LibraryInventory.Core\LibraryInventory.Core.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10" />
-      <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.10"/>
+        <PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3"/>
     </ItemGroup>
 
     <PropertyGroup>

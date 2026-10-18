@@ -1,1 +1,9 @@
-namespace LibraryInventory.Core.Settings; public class LibrarySettings{public int MaxCheckoutDays{get;set;}=14;public int MaxBooksPerMember{get;set;}=3;public string DueDatePolicy{get;set;}="Standard";public int ExtendedLoanMultiplier{get;set;}=2;}
+namespace LibraryInventory.Core.Settings;
+
+public class LibrarySettings
+{
+    public int MaxCheckoutDays { get; set; } = 14;
+    public int MaxBooksPerMember { get; set; } = 3;
+    public string DueDatePolicy { get; set; } = "Standard";
+    public int ExtendedLoanMultiplier { get; set; } = 2;
+}

@@ -8,18 +8,18 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.9"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
-        <PackageReference Include="Microsoft.OpenApi" Version="2.3.0" />
+        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0"/>
+        <PackageReference Include="Microsoft.OpenApi" Version="2.3.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\LibraryInventory.Core\LibraryInventory.Core.csproj" />
-      <ProjectReference Include="..\LibraryInventory.Infrastructure\LibraryInventory.Infrastructure.csproj" />
+        <ProjectReference Include="..\LibraryInventory.Core\LibraryInventory.Core.csproj"/>
+        <ProjectReference Include="..\LibraryInventory.Infrastructure\LibraryInventory.Infrastructure.csproj"/>
     </ItemGroup>
 
 </Project>
