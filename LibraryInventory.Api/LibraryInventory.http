@@ -85,3 +85,12 @@ PUT {{LibraryInventory_HostAddress}}/checkouts/1/return
 ###
 GET {{LibraryInventory_HostAddress}}/checkouts/overdue
 Accept: application/json
+
+###
+GET {{LibraryInventory_HostAddress}}/api/books?page=1&pageSize=1
+
+###
+GET {{LibraryInventory_HostAddress}}/api/books/999
+
+###
+GET {{LibraryInventory_HostAddress}}/api/members/abs
