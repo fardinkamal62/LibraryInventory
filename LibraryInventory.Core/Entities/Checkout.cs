@@ -24,7 +24,7 @@ public class Checkout : BaseEntity
     public int MemberId { get; private set; }
     public Member Member { get; private set; } = null!;
     public DateTime CheckedOutAtUtc { get; private set; }
-    public DateTime DueDateUtc { get; }
+    public DateTime DueDateUtc { get; private set; }
     public DateTime? ReturnedAtUtc { get; private set; }
     public bool IsActive => ReturnedAtUtc is null;
 

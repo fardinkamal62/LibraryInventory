@@ -1,4 +1,5 @@
 using FluentValidation;
+using LibraryInventory.Api.Extensions;
 using LibraryInventory.Api.Validators.Books;
 using LibraryInventory.Core.Interfaces;
 using LibraryInventory.Core.Settings;
@@ -12,7 +13,11 @@ Directory.CreateDirectory("App_Data");
 
 builder.Services.AddControllers();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateBookDtoValidator>();
-builder.Services.Configure<LibrarySettings>(builder.Configuration.GetSection("LibrarySettings"));
+builder.Services.AddOptions<LibrarySettings>()
+    .Bind(builder.Configuration.GetSection("LibrarySettings"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddSingleton(TimeProvider.System);
 
 builder.Services.AddDbContext<AppDbContext>(o =>
@@ -27,6 +32,7 @@ builder.Services.AddSingleton<IDueDateCalculator>(sp =>
         ? ActivatorUtilities.CreateInstance<ExtendedDueDateCalculator>(sp)
         : ActivatorUtilities.CreateInstance<StandardDueDateCalculator>(sp));
 builder.Services.AddOpenApi();
+
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
@@ -36,6 +42,8 @@ using (var scope = app.Services.CreateScope())
 }
 
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
+
+app.UseApiMiddleware();
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
