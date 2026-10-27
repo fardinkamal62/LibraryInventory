@@ -1,36 +1,23 @@
 using FluentValidation;
 using LibraryInventory.Api.Extensions;
 using LibraryInventory.Api.Validators.Books;
-using LibraryInventory.Core.Interfaces;
-using LibraryInventory.Core.Settings;
 using LibraryInventory.Infrastructure.Data;
-using LibraryInventory.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 Directory.CreateDirectory("App_Data");
 
 builder.Services.AddControllers();
 builder.Services.AddValidatorsFromAssemblyContaining<CreateBookDtoValidator>();
-builder.Services.AddOptions<LibrarySettings>()
-    .Bind(builder.Configuration.GetSection("LibrarySettings"))
-    .ValidateDataAnnotations()
-    .ValidateOnStart();
 
 builder.Services.AddSingleton(TimeProvider.System);
 
-builder.Services.AddDbContext<AppDbContext>(o =>
-    o.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"),
-        x => x.MigrationsAssembly("LibraryInventory.Infrastructure")));
-
-builder.Services.AddScoped<IBookService, BookService>();
-builder.Services.AddScoped<IMemberService, MemberService>();
-builder.Services.AddScoped<ICheckoutService, CheckoutService>();
-builder.Services.AddSingleton<IDueDateCalculator>(sp =>
-    sp.GetRequiredService<IOptions<LibrarySettings>>().Value.DueDatePolicy == "Extended"
-        ? ActivatorUtilities.CreateInstance<ExtendedDueDateCalculator>(sp)
-        : ActivatorUtilities.CreateInstance<StandardDueDateCalculator>(sp));
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddLibrarySettings(builder.Configuration);
+builder.Services.AddBookFeature();
+builder.Services.AddMemberFeature();
+builder.Services.AddCheckoutFeature();
+builder.Services.AddLoggerService();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
