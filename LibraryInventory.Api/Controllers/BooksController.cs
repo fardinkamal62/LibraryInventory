@@ -1,4 +1,5 @@
 using FluentValidation;
+using LibraryInventory.Api.Dtos;
 using LibraryInventory.Api.Dtos.Books;
 using LibraryInventory.Api.Extensions;
 using LibraryInventory.Core.Commands;
@@ -24,7 +25,9 @@ public class BooksController(IBookService service) : ControllerBase
     public async Task<IActionResult> GetById(int id, CancellationToken ct)
     {
         var result = await service.GetByIdAsync(id, ct);
-        return result.IsSuccess ? Ok(ToListDto(result.Data!)) : this.ToFailure(result.Error, result.Message);
+        return result.IsSuccess
+            ? Ok(ToDetailedDto(result.Data!))
+            : this.ToFailure(result.Error, result.Message);
     }
 
     [HttpPost]
@@ -68,6 +71,21 @@ public class BooksController(IBookService service) : ControllerBase
     {
         return new BookListItemDto(item.Book.BookId, item.Book.BookName, item.Book.Author, item.Book.IsbnNumber,
             item.Book.PageCount, item.Book.Price, item.Book.PageMaterial, item.Book.PhotoUrl, item.Available);
+    }
+
+    private DetailedBookDto ToDetailedDto(BookWithAvailability item)
+    {
+        var id = item.Book.BookId;
+        var links = new List<Link>
+        {
+            new("self", Url.Link("GetBook", new { id })!, "GET"),
+            new("update", Url.Link("UpdateBook", new { id })!, "PUT"),
+            new("delete", Url.Link("DeleteBook", new { id })!, "DELETE")
+        };
+        if (item.Available) links.Add(new("checkout", Url.Link("CreateCheckout", null)!, "POST"));
+
+        return new DetailedBookDto(item.Book.BookId, item.Book.BookName, item.Book.Author, item.Book.IsbnNumber,
+            item.Book.PageCount, item.Book.Price, item.Book.PageMaterial, item.Book.PhotoUrl, item.Available, links);
     }
 
     private static BookResponseDto ToResponseDto(Book book)
