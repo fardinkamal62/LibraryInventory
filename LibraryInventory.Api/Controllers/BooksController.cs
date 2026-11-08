@@ -3,8 +3,10 @@ using LibraryInventory.Api.Dtos;
 using LibraryInventory.Api.Dtos.Books;
 using LibraryInventory.Api.Extensions;
 using LibraryInventory.Core.Commands;
+using LibraryInventory.Core.Common;
 using LibraryInventory.Core.Entities;
 using LibraryInventory.Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryInventory.Api.Controllers;
@@ -31,6 +33,7 @@ public class BooksController(IBookService service) : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.Librarian)]
     public async Task<IActionResult> Create(CreateBookDto dto, IValidator<CreateBookDto> validator,
         CancellationToken ct)
     {
@@ -46,6 +49,7 @@ public class BooksController(IBookService service) : ControllerBase
     }
 
     [HttpPut("{id:int}", Name = "UpdateBook")]
+    [Authorize(Roles = Roles.Librarian)]
     public async Task<IActionResult> Update(int id, UpdateBookDto dto, IValidator<UpdateBookDto> validator,
         CancellationToken ct)
     {
@@ -61,6 +65,7 @@ public class BooksController(IBookService service) : ControllerBase
     }
 
     [HttpDelete("{id:int}", Name = "DeleteBook")]
+    [Authorize(Roles = Roles.Librarian)]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
         var result = await service.DeleteAsync(id, ct);

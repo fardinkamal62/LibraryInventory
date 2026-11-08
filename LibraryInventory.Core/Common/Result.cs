@@ -6,7 +6,8 @@ public enum ErrorType
     NotFound,
     Conflict,
     Validation,
-    RuleViolation
+    RuleViolation,
+    Unauthorized
 }
 
 public class Result<T>
@@ -54,6 +55,11 @@ public class Result<T>
     {
         return Failure(ErrorType.RuleViolation, msg);
     }
+
+    public static Result<T> Unauthorized(string msg)
+    {
+        return Failure(ErrorType.Unauthorized, msg);
+    }
 }
 
 public class OperationResult
@@ -93,6 +99,11 @@ public class OperationResult
     public static OperationResult RuleViolation(string m)
     {
         return Failure(ErrorType.RuleViolation, m);
+    }
+
+    public static OperationResult Unauthorized(string m)
+    {
+        return Failure(ErrorType.Unauthorized, m);
     }
 }
 

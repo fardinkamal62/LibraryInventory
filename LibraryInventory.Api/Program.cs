@@ -1,8 +1,6 @@
 using FluentValidation;
 using LibraryInventory.Api.Extensions;
 using LibraryInventory.Api.Validators.Books;
-using LibraryInventory.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 Directory.CreateDirectory("App_Data");
@@ -18,20 +16,20 @@ builder.Services.AddBookFeature();
 builder.Services.AddMemberFeature();
 builder.Services.AddCheckoutFeature();
 builder.Services.AddLoggerService();
+builder.Services.AddAuthFeature(builder.Configuration);
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
-    if (app.Environment.IsDevelopment()) await DbContextSeeder.SeedAsync(db);
-}
+
+app.UseApiMiddleware();
+await app.InitializeDatabaseAsync();   // Migrate always, Seed only in Development
 
 if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
-app.UseApiMiddleware();
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
+
+public partial class Program;

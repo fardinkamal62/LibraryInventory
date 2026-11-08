@@ -12,6 +12,7 @@ public static class ResultExtensions
         {
             ErrorType.NotFound => c.NotFound(new { error = m }),
             ErrorType.Conflict => c.Conflict(new { error = m }),
+            ErrorType.Unauthorized => c.Unauthorized(new { error = m }),
             ErrorType.Validation or ErrorType.RuleViolation => c.UnprocessableEntity(new { error = m }),
             _ => c.BadRequest(new { error = m })
         };

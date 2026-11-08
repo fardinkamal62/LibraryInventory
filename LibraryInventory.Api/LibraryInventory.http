@@ -1,30 +1,48 @@
 @LibraryInventory_HostAddress = http://localhost:5043/api
 
-GET {{LibraryInventory_HostAddress}}/books?search=clean&page=1&pageSize=20
-Accept: application/json
+# Paste the token returned by POST /auth/login (or /auth/register) below.
+@librarianToken = REPLACE_WITH_LIBRARIAN_TOKEN
+@memberToken = REPLACE_WITH_MEMBER_TOKEN
 
-###
-GET {{LibraryInventory_HostAddress}}/books/1
-Accept: application/json
-
-###
-PUT {{LibraryInventory_HostAddress}}/books/1
+### Register a member
+POST {{LibraryInventory_HostAddress}}/auth/register
 Content-Type: application/json
 
 {
-  "bookName": "Clean Code",
-  "author": "Robert C. Martin",
-  "pageCount": 464,
-  "price": 32.99,
-  "pageMaterial": 0,
-  "photoUrl": "https://example.com/clean"
+  "memberName": "Carol Jones",
+  "email": "carol@example.com",
+  "password": "Member#1234"
 }
 
-###
-DELETE {{LibraryInventory_HostAddress}}/books/1
+### Log in as the seeded librarian
+POST {{LibraryInventory_HostAddress}}/auth/login
+Content-Type: application/json
 
-###
+{
+  "email": "librarian@library.local",
+  "password": "Librarian#123"
+}
+
+### Log in as a member
+POST {{LibraryInventory_HostAddress}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "carol@example.com",
+  "password": "Member#1234"
+}
+
+### Books: list (search, availability, paging)
+GET {{LibraryInventory_HostAddress}}/books?search=clean&available=true&page=1&pageSize=20
+Accept: application/json
+
+### Books: get by id (includes HATEOAS links)
+GET {{LibraryInventory_HostAddress}}/books/1
+Accept: application/json
+
+### Books: create (Librarian)
 POST {{LibraryInventory_HostAddress}}/books
+Authorization: Bearer {{librarianToken}}
 Content-Type: application/json
 
 {
@@ -37,16 +55,45 @@ Content-Type: application/json
   "photoUrl": "https://example.com/ddd"
 }
 
-###
+### Books: update (Librarian)
+PUT {{LibraryInventory_HostAddress}}/books/1
+Authorization: Bearer {{librarianToken}}
+Content-Type: application/json
+
+{
+  "bookName": "Clean Code",
+  "author": "Robert C. Martin",
+  "pageCount": 464,
+  "price": 32.99,
+  "pageMaterial": 0,
+  "photoUrl": "https://example.com/clean"
+}
+
+### Books: delete (Librarian)
+DELETE {{LibraryInventory_HostAddress}}/books/1
+Authorization: Bearer {{librarianToken}}
+
+### Books: missing id (404)
+GET {{LibraryInventory_HostAddress}}/books/999
+Accept: application/json
+
+### Books: clamped paging
+GET {{LibraryInventory_HostAddress}}/books?page=0&pageSize=-5
+Accept: application/json
+
+### Members: list (Librarian)
 GET {{LibraryInventory_HostAddress}}/members?page=1&pageSize=20
+Authorization: Bearer {{librarianToken}}
 Accept: application/json
 
-###
+### Members: get by id (Librarian)
 GET {{LibraryInventory_HostAddress}}/members/1
+Authorization: Bearer {{librarianToken}}
 Accept: application/json
 
-###
+### Members: create (Librarian)
 POST {{LibraryInventory_HostAddress}}/members
+Authorization: Bearer {{librarianToken}}
 Content-Type: application/json
 
 {
@@ -54,8 +101,9 @@ Content-Type: application/json
   "email": "carol@example.com"
 }
 
-###
+### Members: update (Librarian)
 PUT {{LibraryInventory_HostAddress}}/members/1
+Authorization: Bearer {{librarianToken}}
 Content-Type: application/json
 
 {
@@ -63,11 +111,13 @@ Content-Type: application/json
   "email": "carol@example.com"
 }
 
-###
+### Members: delete (Librarian)
 DELETE {{LibraryInventory_HostAddress}}/members/1
+Authorization: Bearer {{librarianToken}}
 
-###
+### Checkouts: check out (Librarian, or Member for own memberId)
 POST {{LibraryInventory_HostAddress}}/checkouts
+Authorization: Bearer {{librarianToken}}
 Content-Type: application/json
 
 {
@@ -75,22 +125,45 @@ Content-Type: application/json
   "memberId": 1
 }
 
-###
+### Checkouts: get by id (Librarian or owning Member)
 GET {{LibraryInventory_HostAddress}}/checkouts/1
+Authorization: Bearer {{librarianToken}}
 Accept: application/json
 
-###
+### Checkouts: return (Librarian)
 PUT {{LibraryInventory_HostAddress}}/checkouts/1/return
+Authorization: Bearer {{librarianToken}}
 
-###
+### Checkouts: overdue (Librarian)
 GET {{LibraryInventory_HostAddress}}/checkouts/overdue
+Authorization: Bearer {{librarianToken}}
 Accept: application/json
 
-###
-GET {{LibraryInventory_HostAddress}}/api/books?page=1&pageSize=1
+### Security: anonymous create (401)
+POST {{LibraryInventory_HostAddress}}/books
+Content-Type: application/json
 
-###
-GET {{LibraryInventory_HostAddress}}/api/books/999
+{
+  "bookName": "Anonymous",
+  "author": "Nobody",
+  "isbnNumber": "1234567890",
+  "pageCount": 10,
+  "price": 1.5,
+  "pageMaterial": 0,
+  "photoUrl": "https://example.com/anonymous"
+}
 
-###
-GET {{LibraryInventory_HostAddress}}/api/members/abs
+### Security: Member create book (403)
+POST {{LibraryInventory_HostAddress}}/books
+Authorization: Bearer {{memberToken}}
+Content-Type: application/json
+
+{
+  "bookName": "Member Attempt",
+  "author": "Member",
+  "isbnNumber": "1234567891",
+  "pageCount": 10,
+  "price": 1.5,
+  "pageMaterial": 0,
+  "photoUrl": "https://example.com/member"
+}

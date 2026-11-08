@@ -1,7 +1,7 @@
 using LibraryInventory.Core.Interfaces;
 using Microsoft.Extensions.Logging;
 
-namespace LibraryInventory.Core.Services;
+namespace LibraryInventory.Infrastructure.Services;
 
 public class LoggerService(ILogger<LoggerService> logger) : ILoggerService
 {

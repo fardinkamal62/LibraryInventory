@@ -2,14 +2,17 @@ using FluentValidation;
 using LibraryInventory.Api.Dtos.Members;
 using LibraryInventory.Api.Extensions;
 using LibraryInventory.Core.Commands;
+using LibraryInventory.Core.Common;
 using LibraryInventory.Core.Entities;
 using LibraryInventory.Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryInventory.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = Roles.Librarian)]
 public class MembersController(IMemberService service) : ControllerBase
 {
     [HttpGet]
